@@ -41,7 +41,7 @@ def run():
     # Chat Interface
     user_question = st.text_input("Sua perguta:", key="user_question")
 
-    if user_question and st.button("Enviar Pergunta"):
+    if st.button("Enviar Pergunta") and user_question:
         with st.spinner("Generating answer..."):
             qa_instance = chat_ins.ask(user_question)
 
@@ -49,7 +49,7 @@ def run():
 
             feedback_input = st.text_input("Feedback (sim/não/outro):", key="feedback_input")
 
-            if feedback_input and st.button("Enviar Feedback"):
+            if st.button("Enviar Feedback") and feedback_input:
                 chat_ins.set_feedback(qa_instance, feedback_input)
                 chat_ins.log(qa_instance)
 
