@@ -1,0 +1,64 @@
+
+# data
+*.csv
+*.parquet
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg
+*.egg-info/
+dist/
+build/
+*.pyo
+*.pyd
+*.whl
+
+# Jupyter Notebooks
+.ipynb_checkpoints/
+
+# Virtualenv
+venv/
+env/
+ENV/
+env.bak/
+*.env
+tmp/
+
+# PyCharm
+.idea/
+
+# VSCode
+.vscode/
+
+# Data and models
+data/raw/
+data/processed/
+models/
+*.h5
+*.hdf5
+*.pkl
+
+# Logs
+logs/
+*.log
+
+# MacOS
+.DS_Store
+
+# Temporary files
+*.swp
+*.bak
+*.tmp
+
+# Jupyter Notebook Metadata
+**/.ipynb_checkpoints
+
+# Secrets (environment variables, API keys, etc.)
+.env
+
+catboost_info/
+
+tmp/
+
+*.pdf

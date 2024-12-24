@@ -1,0 +1,8 @@
+langchain==0.3.13
+langchain-community==0.3.13
+sentence-transformers==3.3.1
+langchain-huggingface==0.1.2
+langchain-google-genai
+pypdf==5.1.0
+faiss-cpu==1.9.0.post1
+streamlit==1.41.1
