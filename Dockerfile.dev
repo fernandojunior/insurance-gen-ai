@@ -4,15 +4,16 @@ FROM python:3.10-slim
 # Definir o diretório de trabalho dentro do container
 WORKDIR /app
 
-# Copiar arquivos da aplicação para o container
-COPY ./src /app/
-COPY ./tests /app/
 COPY ./requirements.txt /app/
 COPY ./requirements.dev.txt /app/
 
 # Instalar as dependências
 RUN pip install --no-cache-dir -r requirements.txt
 RUN pip install --no-cache-dir -r requirements.dev.txt
+
+# Copiar arquivos da aplicação para o container
+COPY ./src /app/
+COPY ./tests /app/
 
 # Comando para rodar a aplicação
 CMD ["pytest", "test_chat.py"]

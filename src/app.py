@@ -7,54 +7,52 @@ import vectorstore
 
 
 def run():
-    with st.spinner("Loading and processing documents / embeddings..."):
+    chat_ins = None
 
+    if "user_question" not in st.session_state:
+        st.session_state.user_question = ""
+    
+    if "feedback_input" not in st.session_state:
+        st.session_state.feedback_input = ""
+
+    with st.spinner("Loading and processing documents / embeddings..."):
         index_files = utils.list_files_by_datetime(config.index_folder_path)
-        st.write("vai")
-        st.write(index_files)
+        # st.write(index_files)
 
         if len(index_files) == 1:
             vectorstore.run()
 
-        st.session_state["chat"] = chat.Chat(
+        chat_ins = chat.Chat(
             index_folder_path=config.index_folder_path,
             chat_template=config.chat_template,
         )
 
         st.success("Documents loaded and chain initialized!")
 
-    # Chat Interface
-    user_input = st.text_input("Sua perguta:")
-
-    if st.button("Enviar Pergunta") and user_input:
-        with st.spinner("Generating answer..."):
-            try:
-                qa_instance = st.session_state["chat"].ask(user_input)
-
-                # Display the answer
-                st.success(qa_instance.answer)
-
-                feedback_input = st.text_input("Feedback (sim/não/outro):")
-
-                if st.button("Enviar Feedback") and feedback_input:
-                    st.session_state["chat"].set_feedback(qa_instance, feedback_input)
-                    st.session_state["chat"].log(qa_instance)
-            except Exception as e:
-                st.error(f"An error occurred: {e}")
-
-    # Display Q&A history
     st.subheader("Q&A History")
-    qa_history = st.session_state["chat"].get_history()
+    qa_history = chat_ins.get_history()
 
     for row in qa_history:
-        question, answer, feedback = row
-        st.write(f"**Q:** {question}")
-        st.write(f"**A:** {answer}")
-        st.write(f"**F:** {feedback}")
+        st.write(row)
 
     st.subheader("Global: Feedback")
-    st.write(st.session_state["chat"].analyze_feedback())
+    st.write(chat_ins.analyze_feedback())
 
+    # Chat Interface
+    user_question = st.text_input("Sua perguta:", key="user_question")
+
+    if user_question and st.button("Enviar Pergunta"):
+        with st.spinner("Generating answer..."):
+            qa_instance = chat_ins.ask(user_question)
+
+            st.success(qa_instance.answer)
+
+            feedback_input = st.text_input("Feedback (sim/não/outro):", key="feedback_input")
+
+            if feedback_input and st.button("Enviar Feedback"):
+                chat_ins.set_feedback(qa_instance, feedback_input)
+                chat_ins.log(qa_instance)
 
 if __name__ == "__main__":
+    
     run()
