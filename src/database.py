@@ -17,6 +17,7 @@ class DatabaseHandler:
         Args:
             db_path (str): Path to the SQLite database file. Defaults to 'chatbot_history.db'.
         """
+        self.db_path = db_path
         self.conn = sqlite3.connect(db_path)
         self.create_table()
 
@@ -35,6 +36,7 @@ class DatabaseHandler:
         """
         self.conn.execute(query)
         self.conn.commit()
+        self.conn.close()
 
     def log_interaction(
         self, question: str, answer: str, feedback: Optional[str] = None
@@ -51,8 +53,10 @@ class DatabaseHandler:
         INSERT INTO interactions (question, answer, feedback)
         VALUES (?, ?, ?)
         """
+        self.conn = sqlite3.connect(self.db_path)
         self.conn.execute(query, (question, answer, feedback))
         self.conn.commit()
+        self.conn.close()
 
     def fetch_all_interactions(self) -> List[sqlite3.Row]:
         """
@@ -62,7 +66,11 @@ class DatabaseHandler:
             List[sqlite3.Row]: A list of all rows in the interactions table.
         """
         query = "SELECT * FROM interactions"
-        return self.conn.execute(query).fetchall()
+        self.conn = sqlite3.connect(self.db_path)
+        result = self.conn.execute(query).fetchall()
+        self.conn.close()
+
+        return result
 
     def analyze_feedback(self) -> Dict[str, Any]:
         """
