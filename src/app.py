@@ -12,8 +12,14 @@ def run():
     if "user_question" not in st.session_state:
         st.session_state.user_question = ""
     
-    if "feedback_input" not in st.session_state:
-        st.session_state.feedback_input = ""
+    if "feedback" not in st.session_state:
+        st.session_state.feedback = ""
+
+    if "answer_sucess" not in st.session_state:
+        st.session_state.answer_sucess = False
+
+    if "qa_instance" not in st.session_state:
+        st.session_state.qa_instance = None
 
     with st.spinner("Loading and processing documents / embeddings..."):
         index_files = utils.list_files_by_datetime(config.index_folder_path)
@@ -38,20 +44,37 @@ def run():
     st.subheader("Global: Feedback")
     st.write(chat_ins.analyze_feedback())
 
-    # Chat Interface
-    user_question = st.text_input("Sua perguta:", key="user_question")
+    if st.session_state.user_question == "" and st.session_state.feedback == "":
+        # st.session_state.user_question = st.text_input("Sua perguta:", key="user_question")
+        st.session_state.user_question = st.text_input("Sua perguta", st.session_state.user_question)
 
-    if st.button("Enviar Pergunta") and user_question:
-        with st.spinner("Generating answer..."):
-            qa_instance = chat_ins.ask(user_question)
+        if st.button("Enviar Pergunta") and st.session_state.user_question:
+            with st.spinner("Generating answer..."):
+                st.session_state.qa_instance = chat_ins.ask(st.session_state.user_question)
 
-            st.success(qa_instance.answer)
+                st.session_state.answer_sucess = True
 
-            feedback_input = st.text_input("Feedback (sim/não/outro):", key="feedback_input")
+                if st.button("OK"):
+                    st.write("Button clicked!")
 
-            if st.button("Enviar Feedback") and feedback_input:
-                chat_ins.set_feedback(qa_instance, feedback_input)
-                chat_ins.log(qa_instance)
+    if st.session_state.answer_sucess:
+        st.success(st.session_state.qa_instance.answer)
+
+    if st.session_state.user_question != "" and st.session_state.feedback == "" and st.session_state.answer_sucess:
+        st.session_state.feedback = st.text_input("Feedback (sim/não/outro):", st.session_state.feedback)
+
+        if st.button("Enviar Feedback") and st.session_state.feedback:
+            chat_ins.set_feedback(st.session_state.qa_instance, st.session_state.feedback)
+            chat_ins.log(st.session_state.qa_instance)
+
+            st.session_state.qa_instance = None
+            st.session_state.user_question = ""
+            st.session_state.feedback = ""
+            st.session_state.answer_sucess = False
+
+            if st.button("OK"):
+                st.write("Button clicked!")
+
 
 if __name__ == "__main__":
     
