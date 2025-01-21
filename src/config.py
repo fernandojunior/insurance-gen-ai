@@ -1,6 +1,8 @@
 input_folder_path = "./data/input"
 
-index_folder_path = "./data/output"
+output_folder_path = "./data/output"
+
+db_path = "./data/database/chatbot_history.db"
 
 chat_template = """
 Você é um assistente especializado em seguros.

@@ -10,8 +10,9 @@ COPY ./requirements.txt /app/
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copiar arquivos da aplicação para o container
-COPY ./data  /app/data/
 COPY ./src /app/
+
+VOLUME ["/app/data/input", "/app/data/output", "./data/database"]
 
 # Expor a porta padrão do Streamlit (8501)
 EXPOSE 8501

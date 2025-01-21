@@ -14,7 +14,7 @@ import models
 
 
 def setup_retriever(
-    index_folder_path: str,
+    store_folder_path: str,
     embeddings: Embeddings,
     search_type: str = "similarity",
     search_kwargs: Optional[Dict[str, Union[str, int]]] = None,
@@ -23,7 +23,7 @@ def setup_retriever(
     Set up the retriever using FAISS and embeddings.
 
     Args:
-        index_folder_path (str): Path to the folder containing the FAISS index files.
+        store_folder_path (str): Path to the folder containing the FAISS index files.
         embeddings (Embeddings): Embedding model instance.
         search_type (str): The type of search to perform. Defaults to 'similarity'.
         search_kwargs (Optional[Dict[str, Union[str, int]]]): Additional search parameters. Defaults to {"k": 5}.
@@ -32,10 +32,10 @@ def setup_retriever(
         BaseRetriever: Configured retriever object.
     """
     search_kwargs = search_kwargs or {"k": 5}
-    files = utils.list_files_by_datetime(index_folder_path)
+    files = utils.list_files_by_datetime(store_folder_path)
 
     if not files:
-        raise Exception("index_folder_path empty" + ",".join(files))
+        raise Exception("store_folder_path empty" + ",".join(files))
 
     files = [f for f in files if f.endswith(".faiss")]
 
@@ -44,13 +44,9 @@ def setup_retriever(
 
     index_name = [f.split(".faiss")[0] for f in files][0]
 
-    print("oi")
-    print(index_name)
-    print(index_folder_path)
-
     vectorstore = FAISS.load_local(
         index_name=index_name,
-        folder_path=index_folder_path,
+        folder_path=store_folder_path,
         embeddings=embeddings,
         allow_dangerous_deserialization=True,
     )
@@ -111,7 +107,6 @@ class QA:
         """
         self.question = question
         self.answer = answer
-        self.feedback = None
 
     def set_answer(self, answer: str) -> None:
         """
@@ -121,15 +116,6 @@ class QA:
             answer (str): The model's answer.
         """
         self.answer = answer
-
-    def set_feedback(self, feedback: str) -> None:
-        """
-        Set feedback for the answer.
-
-        Args:
-            feedback (str): User-provided feedback.
-        """
-        self.feedback = feedback
 
     def __repr__(self) -> str:
         """
@@ -146,21 +132,22 @@ class Chat:
     Chat system class to handle user interactions, retrieval, and logging.
     """
 
-    def __init__(self, index_folder_path: str, chat_template: str) -> None:
+    def __init__(self, store_folder_path: str, db_path: str, chat_template: str) -> None:
         """
         Initialize the Chat instance.
 
         Args:
-            index_folder_path (str): Path to the folder containing FAISS index files.
+            store_folder_path (str): Path to the folder containing FAISS index files.
+            db_path (str): Path to the folder containing database data.
             chat_template (str): Template string for the chat prompts.
         """
         embeddings = models.get_embeddings()
         llm = models.get_llm()
         retriever = setup_retriever(
-            index_folder_path=index_folder_path, embeddings=embeddings
+            store_folder_path=store_folder_path, embeddings=embeddings
         )
         self._qa_chain = setup_chain(retriever, llm, chat_template)
-        self._db_handler = db.DatabaseHandler()
+        self._db_handler = db.DatabaseHandler(db_path=db_path)
 
     def ask(self, question: str) -> QA:
         """
@@ -176,16 +163,6 @@ class Chat:
         qa.set_answer(self._qa_chain.run({"question": question}))
         return qa
 
-    def set_feedback(self, qa: QA, feedback: str) -> None:
-        """
-        Set feedback for a specific QA instance.
-
-        Args:
-            qa (QA): The QA instance.
-            feedback (str): Feedback provided by the user.
-        """
-        qa.set_feedback(feedback)
-
     def log(self, qa: QA) -> QA:
         """
         Log the interaction in the database.
@@ -196,7 +173,7 @@ class Chat:
         Returns:
             QA: The logged QA instance.
         """
-        self._db_handler.log_interaction(qa.question, qa.answer, qa.feedback)
+        self._db_handler.log_interaction(qa.question, qa.answer)
         return qa
 
     def get_history(self) -> List[db.sqlite3.Row]:
@@ -207,13 +184,3 @@ class Chat:
             List[sqlite3.Row]: A list of rows representing the interaction history.
         """
         return self._db_handler.fetch_all_interactions()
-
-    def analyze_feedback(self) -> Dict[str, Any]:
-        """
-        Analyze general user feedback from the interactions table.
-
-        Returns:
-            Dict[str, Any]: A dictionary containing statistics on total interactions, positive feedback,
-            negative feedback, and error rate.
-        """
-        return self._db_handler.analyze_feedback()

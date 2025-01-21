@@ -27,7 +27,7 @@ Faça download dos arquivos PDFs e armazene no diretório `dat/input/`
 No diretório raiz do repositório, execute o seguinte comando para construir a imagem Docker:
 ```bash
 docker build -t chat-app .
-   ```
+```
 
 Esse comando criará uma imagem Docker chamada `chat-app`.
 
@@ -45,6 +45,8 @@ Use o seguinte comando para rodar o contêiner Docker localmente, passando o arq
 
 ```bash
 docker run --env-file .env -p 8501:8501 chat-app
+
+docker run --env-file .env -p 8501:8501 -v $(pwd)/data/output/:/app/data/output -v $(pwd)/data/input:/app/data/input -v $(pwd)/data/database/:/app/data/database chat-app
 ```
 
 6. **Acessar a aplicação**:

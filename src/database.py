@@ -10,7 +10,7 @@ class DatabaseHandler:
         conn: SQLite connection object.
     """
 
-    def __init__(self, db_path: str = "chatbot_history.db") -> None:
+    def __init__(self, db_path: str) -> None:
         """
         Initialize the DatabaseHandler with the database path and create the interactions table if it doesn't exist.
 
@@ -30,8 +30,7 @@ class DatabaseHandler:
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             question TEXT,
             answer TEXT,
-            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-            feedback TEXT
+            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
         )
         """
         self.conn.execute(query)
@@ -39,7 +38,7 @@ class DatabaseHandler:
         self.conn.close()
 
     def log_interaction(
-        self, question: str, answer: str, feedback: Optional[str] = None
+        self, question: str, answer: str
     ) -> None:
         """
         Log a new interaction into the database.
@@ -47,14 +46,13 @@ class DatabaseHandler:
         Args:
             question (str): The user's question.
             answer (str): The chatbot's answer.
-            feedback (Optional[str]): User feedback about the interaction. Defaults to None.
         """
         query = """
-        INSERT INTO interactions (question, answer, feedback)
-        VALUES (?, ?, ?)
+        INSERT INTO interactions (question, answer)
+        VALUES (?, ?)
         """
         self.conn = sqlite3.connect(self.db_path)
-        self.conn.execute(query, (question, answer, feedback))
+        self.conn.execute(query, (question, answer)) 
         self.conn.commit()
         self.conn.close()
 
@@ -65,30 +63,9 @@ class DatabaseHandler:
         Returns:
             List[sqlite3.Row]: A list of all rows in the interactions table.
         """
-        query = "SELECT * FROM interactions"
+        query = "SELECT * FROM interactions ORDER BY timestamp"
         self.conn = sqlite3.connect(self.db_path)
         result = self.conn.execute(query).fetchall()
         self.conn.close()
 
         return result
-
-    def analyze_feedback(self) -> Dict[str, Any]:
-        """
-        Analyze user feedback from the interactions table.
-
-        Returns:
-            Dict[str, Any]: A dictionary containing statistics on total interactions, positive feedback,
-            negative feedback, and error rate.
-        """
-        interactions = self.fetch_all_interactions()
-
-        total = len(interactions)
-        positive = sum(1 for i in interactions if i[4] == "sim")
-        negative = sum(1 for i in interactions if i[4] == "não")
-
-        return {
-            "total_interactions": total,
-            "positive_feedback": positive,
-            "negative_feedback": negative,
-            "error_rate": negative / total if total > 0 else 0,
-        }

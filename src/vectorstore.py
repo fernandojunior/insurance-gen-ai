@@ -50,7 +50,7 @@ def split_text(
     return text_splitter.split_documents(documents)
 
 
-def create_vector_store(documents: List[dict], embeddings: Embeddings) -> str:
+def create_vector_store(documents: List[dict], embeddings: Embeddings, folder_path) -> str:
     """
     Create a vector store index from documents and save it locally.
 
@@ -65,22 +65,25 @@ def create_vector_store(documents: List[dict], embeddings: Embeddings) -> str:
 
     vectorstore = FAISS.from_documents(documents, embeddings)
     file_name = f"{request_id}.bin"
-    folder_path = config.index_folder_path
     vectorstore.save_local(index_name=file_name, folder_path=folder_path)
 
     return request_id
 
 
-def run() -> None:
+def run(input_folder_path, output_folder_path) -> None:
     """
     Main function to load documents, process text, and create a vector store index.
     """
-    documents = load_documents(config.input_folder_path)
+    files = utils.list_files_by_datetime(config.output_folder_path)
+    files = [f for f in files if f.endswith(".faiss")]
+
+    if len(files) > 0:
+        return files[0].split(".")[0]
+
+    documents = load_documents(input_folder_path)
     chunks = split_text(documents)
     embeddings = models.get_embeddings()
-
-    print(f"Split Docs length: {len(chunks)}")
-
-    print("Embedding and creating vector index")
-    vector_id = create_vector_store(chunks, embeddings)
+    vector_id = create_vector_store(chunks, embeddings, output_folder_path)
     print(f"Vector store ID: {vector_id}")
+
+    return vector_id

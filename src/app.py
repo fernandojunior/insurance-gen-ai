@@ -7,75 +7,48 @@ import vectorstore
 
 
 def run():
-    chat_ins = None
+    st.title("RAG 0800")
 
-    if "user_question" not in st.session_state:
-        st.session_state.user_question = ""
-    
-    if "feedback" not in st.session_state:
-        st.session_state.feedback = ""
+    expander = st.expander("O que é?")
+    expander.write('''
+        Chatbot simples baeado em LLM/RAG, implementado com LangChain e outras tecnologias Open Source / gratuitas.
+        Adicione seus PDFs no diretório `./data/input/` e faça perguntas relacionadas.
+    ''')
 
-    if "answer_sucess" not in st.session_state:
-        st.session_state.answer_sucess = False
-
-    if "qa_instance" not in st.session_state:
-        st.session_state.qa_instance = None
-
-    with st.spinner("Loading and processing documents / embeddings..."):
-        index_files = utils.list_files_by_datetime(config.index_folder_path)
-        # st.write(index_files)
-
-        if len(index_files) == 1:
-            vectorstore.run()
+    with st.spinner("Processando documentos de entrada..."):
+        vectorstore.run(config.input_folder_path, config.output_folder_path)
 
         chat_ins = chat.Chat(
-            index_folder_path=config.index_folder_path,
+            store_folder_path=config.output_folder_path,
+            db_path=config.db_path,
             chat_template=config.chat_template,
         )
 
-        st.success("Documents loaded and chain initialized!")
+    if "messages" not in st.session_state:
+        st.session_state.messages = []
 
-    st.subheader("Q&A History")
-    qa_history = chat_ins.get_history()
+    # transfer message history from database to streamlit session
+    for row in chat_ins.get_history():
+        st.session_state.messages.append({"role": "user", "content": row[1]})
+        st.session_state.messages.append({"role": "assistant", "content": row[2]})
 
-    for row in qa_history:
-        st.write(row)
-
-    st.subheader("Global: Feedback")
-    st.write(chat_ins.analyze_feedback())
-
-    if st.session_state.user_question == "" and st.session_state.feedback == "":
-        # st.session_state.user_question = st.text_input("Sua perguta:", key="user_question")
-        st.session_state.user_question = st.text_input("Sua perguta", st.session_state.user_question)
-
-        if st.button("Enviar Pergunta") and st.session_state.user_question:
-            with st.spinner("Generating answer..."):
-                st.session_state.qa_instance = chat_ins.ask(st.session_state.user_question)
-
-                st.session_state.answer_sucess = True
-
-                if st.button("OK"):
-                    st.write("Button clicked!")
-
-    if st.session_state.answer_sucess:
-        st.success(st.session_state.qa_instance.answer)
-
-    if st.session_state.user_question != "" and st.session_state.feedback == "" and st.session_state.answer_sucess:
-        st.session_state.feedback = st.text_input("Feedback (sim/não/outro):", st.session_state.feedback)
-
-        if st.button("Enviar Feedback") and st.session_state.feedback:
-            chat_ins.set_feedback(st.session_state.qa_instance, st.session_state.feedback)
-            chat_ins.log(st.session_state.qa_instance)
-
-            st.session_state.qa_instance = None
-            st.session_state.user_question = ""
-            st.session_state.feedback = ""
-            st.session_state.answer_sucess = False
-
-            if st.button("OK"):
-                st.write("Button clicked!")
-
-
-if __name__ == "__main__":
+    for message in st.session_state.messages:
+        with st.chat_message(message["role"]):
+            st.markdown(message["content"])
     
+    if prompt := st.chat_input("What is up?"):
+        st.session_state.messages.append({"role": "user", "content": prompt})
+        with st.chat_message("user"):
+            st.markdown(prompt)
+
+        with st.chat_message("assistant"):
+            with st.spinner("Gerando resposta..."):
+                qa_instance = chat_ins.ask(st.session_state.messages[-1]["content"])
+                response = st.write(qa_instance.answer)
+
+                chat_ins.log(qa_instance)
+
+                st.session_state.messages.append({"role": "assistant", "content": response})
+
+if __name__ == "__main__":    
     run()
