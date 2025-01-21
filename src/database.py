@@ -37,9 +37,7 @@ class DatabaseHandler:
         self.conn.commit()
         self.conn.close()
 
-    def log_interaction(
-        self, question: str, answer: str
-    ) -> None:
+    def log_interaction(self, question: str, answer: str) -> None:
         """
         Log a new interaction into the database.
 
@@ -52,7 +50,7 @@ class DatabaseHandler:
         VALUES (?, ?)
         """
         self.conn = sqlite3.connect(self.db_path)
-        self.conn.execute(query, (question, answer)) 
+        self.conn.execute(query, (question, answer))
         self.conn.commit()
         self.conn.close()
 

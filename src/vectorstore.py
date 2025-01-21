@@ -50,7 +50,9 @@ def split_text(
     return text_splitter.split_documents(documents)
 
 
-def create_vector_store(documents: List[dict], embeddings: Embeddings, folder_path) -> str:
+def create_vector_store(
+    documents: List[dict], embeddings: Embeddings, folder_path
+) -> str:
     """
     Create a vector store index from documents and save it locally.
 

@@ -2,6 +2,7 @@
 # data
 *.csv
 *.parquet
+data/
 
 # Python
 __pycache__/

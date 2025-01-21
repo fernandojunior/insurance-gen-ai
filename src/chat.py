@@ -132,7 +132,9 @@ class Chat:
     Chat system class to handle user interactions, retrieval, and logging.
     """
 
-    def __init__(self, store_folder_path: str, db_path: str, chat_template: str) -> None:
+    def __init__(
+        self, store_folder_path: str, db_path: str, chat_template: str
+    ) -> None:
         """
         Initialize the Chat instance.
 

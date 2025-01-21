@@ -10,16 +10,20 @@ def run():
     st.title("RAG 0800")
 
     expander = st.expander("O que é?")
-    expander.write('''
+    expander.write(
+        """
         Chatbot simples baeado em LLM/RAG, implementado com LangChain e outras tecnologias Open Source / gratuitas.
         Adicione seus documentos em PDF no diretório `./data/input/`, click em processar e faça perguntas relacionadas.
-    ''')
-
+    """
+    )
 
     if "process_success" not in st.session_state:
         st.session_state.process_success = False
 
-    if st.sidebar.button("Processar documentos de entrada") or st.session_state.process_success:
+    if (
+        st.sidebar.button("Processar documentos de entrada")
+        or st.session_state.process_success
+    ):
         with st.spinner("Processando documentos de entrada..."):
             vectorstore.run(config.input_folder_path, config.output_folder_path)
 
@@ -55,5 +59,6 @@ def run():
 
                     chat_ins.log(qa_instance)
 
-if __name__ == "__main__":    
+
+if __name__ == "__main__":
     run()
