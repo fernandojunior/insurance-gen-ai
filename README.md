@@ -2,6 +2,8 @@
 
 Este repositório contém a aplicação web de um chatbot baeado em uma LLM/RAG implementada com LangChain.
 
+![architecture](architecture.png)
+
 ## Pré-requisitos
 
 Antes de gerar a imagem Docker, certifique-se de ter o Docker instalado no seu sistema.
