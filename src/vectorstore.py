@@ -30,6 +30,25 @@ def load_documents(folder_path: str) -> List[dict]:
     return documents
 
 
+def load_documents_from_file_paths(file_paths: List[str]) -> List[dict]:
+    """
+    Load and process all PDF documents from the specified folder.
+
+    Args:
+        file_paths (str): File path for each PDF.
+
+    Returns:
+        List[dict]: A list of document objects, each containing content and metadata.
+    """
+    documents = []
+
+    for pdf_file in file_paths:
+        loader = PyPDFLoader(pdf_file)
+        documents.extend(loader.load_and_split())
+
+    return documents
+
+
 def split_text(
     documents: List[dict], chunk_size: int = 1000, chunk_overlap: int = 200
 ) -> List[dict]:
@@ -72,7 +91,7 @@ def create_vector_store(
     return request_id
 
 
-def run(input_folder_path, output_folder_path) -> None:
+def run(input_file_paths, output_folder_path) -> None:
     """
     Main function to load documents, process text, and create a vector store index.
     """
@@ -82,7 +101,7 @@ def run(input_folder_path, output_folder_path) -> None:
     if len(files) > 0:
         return files[0].split(".")[0]
 
-    documents = load_documents(input_folder_path)
+    documents = load_documents_from_file_paths(input_file_paths)
     chunks = split_text(documents)
     embeddings = models.get_embeddings()
     vector_id = create_vector_store(chunks, embeddings, output_folder_path)
